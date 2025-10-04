@@ -567,45 +567,99 @@
         .keypad {
             display: none; /* Hidden by default */
             grid-template-columns: repeat(3, 1fr);
-            gap: 10px;
+            gap: 12px;
             width: 100%;
             max-width: 300px;
-            margin: 15px auto;
+            margin: 20px auto;
             padding: 10px;
         }
 
         .keypad-btn {
-            background: linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.05) 100%);
+            background: linear-gradient(135deg, 
+                rgba(255, 255, 255, 0.12) 0%, 
+                rgba(255, 255, 255, 0.06) 100%);
             border: 1px solid rgba(255, 255, 255, 0.2);
-            color: #e4e4e7;
+            color: #ffffff;
             font-size: 24px;
-            padding: 15px;
-            border-radius: 12px;
+            padding: 16px;
+            border-radius: 14px;
             cursor: pointer;
             transition: all 0.3s cubic-bezier(0.23, 1, 0.32, 1);
             backdrop-filter: blur(10px);
             font-family: 'JetBrains Mono', monospace;
+            position: relative;
+            overflow: hidden;
+            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+        }
+
+        .keypad-btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(135deg, 
+                rgba(124, 127, 198, 0.2), 
+                rgba(255, 119, 198, 0.2));
+            opacity: 0;
+            transition: opacity 0.3s ease;
         }
 
         .keypad-btn:hover {
             background: rgba(255, 255, 255, 0.15);
             transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(120, 127, 198, 0.3);
+            box-shadow: 
+                0 6px 15px rgba(120, 127, 198, 0.2),
+                0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .keypad-btn:hover::before {
+            opacity: 1;
         }
 
         .keypad-btn:active {
             transform: translateY(1px);
             background: rgba(255, 255, 255, 0.2);
+            box-shadow: 
+                0 2px 8px rgba(120, 127, 198, 0.2),
+                0 1px 2px rgba(0, 0, 0, 0.1);
         }
 
         .keypad-btn.clear {
-            background: linear-gradient(135deg, rgba(239, 68, 68, 0.2) 0%, rgba(239, 68, 68, 0.1) 100%);
-            color: #ef4444;
+            background: linear-gradient(135deg, 
+                rgba(239, 68, 68, 0.2) 0%, 
+                rgba(239, 68, 68, 0.1) 100%);
+            color: #ff4444;
+            font-size: 20px;
+            font-weight: 600;
+            text-shadow: 0 1px 2px rgba(239, 68, 68, 0.2);
+        }
+
+        .keypad-btn.clear:hover {
+            background: linear-gradient(135deg, 
+                rgba(239, 68, 68, 0.25) 0%, 
+                rgba(239, 68, 68, 0.15) 100%);
+            box-shadow: 
+                0 6px 15px rgba(239, 68, 68, 0.2),
+                0 2px 4px rgba(0, 0, 0, 0.1);
         }
 
         .keypad-btn.backspace {
-            background: linear-gradient(135deg, rgba(120, 127, 198, 0.2) 0%, rgba(120, 127, 198, 0.1) 100%);
+            background: linear-gradient(135deg, 
+                rgba(120, 127, 198, 0.2) 0%, 
+                rgba(120, 127, 198, 0.1) 100%);
             color: #7c7fc6;
+            font-size: 20px;
+        }
+
+        .keypad-btn.backspace:hover {
+            background: linear-gradient(135deg, 
+                rgba(120, 127, 198, 0.25) 0%, 
+                rgba(120, 127, 198, 0.15) 100%);
+            box-shadow: 
+                0 6px 15px rgba(120, 127, 198, 0.2),
+                0 2px 4px rgba(0, 0, 0, 0.1);
         }
 
         @media (max-width: 768px) {
@@ -636,13 +690,14 @@
 
         .pin-modal {
             background: linear-gradient(135deg, 
-                rgba(15, 15, 35, 0.95) 0%, 
-                rgba(25, 25, 45, 0.95) 100%);
+                rgba(15, 15, 35, 0.98) 0%, 
+                rgba(25, 25, 45, 0.98) 100%);
             backdrop-filter: blur(30px);
-            padding: 18px;
-            border-radius: 12px;
+            padding: 25px;
+            border-radius: 16px;
             box-shadow: 
-                0 12px 25px rgba(0, 0, 0, 0.3),
+                0 15px 35px rgba(0, 0, 0, 0.4),
+                0 5px 15px rgba(0, 0, 0, 0.2),
                 0 0 0 1px rgba(255, 255, 255, 0.1);
             max-width: 320px;
             width: 90%;
@@ -650,6 +705,7 @@
             position: relative;
             border: 1px solid rgba(255, 255, 255, 0.1);
             animation: modalSlideIn 0.8s cubic-bezier(0.23, 1, 0.32, 1);
+            transform-style: preserve-3d;
         }
 
         @keyframes modalSlideIn {
@@ -664,76 +720,126 @@
         }
 
         .pin-header {
-            margin-bottom: 20px;
+            margin-bottom: 25px;
+            position: relative;
         }
 
         .pin-header i {
-            font-size: 2.2rem;
+            font-size: 2.5rem;
             background: linear-gradient(135deg, #7c7fc6 0%, #ff77c6 100%);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             background-clip: text;
-            margin-bottom: 10px;
-            filter: drop-shadow(0 0 8px rgba(120, 127, 198, 0.3));
+            margin-bottom: 15px;
+            filter: drop-shadow(0 0 12px rgba(120, 127, 198, 0.4));
+            animation: iconPulse 2s ease-in-out infinite;
+        }
+
+        @keyframes iconPulse {
+            0%, 100% { transform: scale(1); filter: drop-shadow(0 0 12px rgba(120, 127, 198, 0.4)); }
+            50% { transform: scale(1.05); filter: drop-shadow(0 0 16px rgba(255, 119, 198, 0.5)); }
         }
 
         .pin-header h2 {
-            color: #e4e4e7;
-            margin-bottom: 8px;
-            font-size: 1.3rem;
+            color: #ffffff;
+            margin-bottom: 10px;
+            font-size: 1.4rem;
             font-weight: 700;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
         }
 
         .pin-header p {
-            color: #a1a1aa;
-            font-size: 0.85rem;
+            color: #b4b4c0;
+            font-size: 0.9rem;
+            line-height: 1.5;
+            max-width: 260px;
+            margin: 0 auto;
         }
 
         .pin-input-group {
-            margin-bottom: 18px;
+            margin-bottom: 20px;
+            position: relative;
         }
 
         .pin-input-group input {
             width: 100%;
-            padding: 10px;
-            margin-bottom: 8px;
-            border: 2px solid rgba(255, 255, 255, 0.1);
-            border-radius: 10px;
-            font-size: 16px;
+            padding: 14px;
+            margin-bottom: 12px;
+            border: 2px solid rgba(255, 255, 255, 0.15);
+            border-radius: 12px;
+            font-size: 18px;
             text-align: center;
             font-family: 'JetBrains Mono', monospace;
-            letter-spacing: 4px;
+            letter-spacing: 6px;
             background: rgba(255, 255, 255, 0.05);
-            color: #e4e4e7;
+            color: #ffffff;
             transition: all 0.4s cubic-bezier(0.23, 1, 0.32, 1);
             backdrop-filter: blur(10px);
+            box-shadow: 
+                inset 0 2px 4px rgba(0, 0, 0, 0.1),
+                0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .pin-input-group input::placeholder {
+            color: rgba(255, 255, 255, 0.3);
+            letter-spacing: 1px;
         }
 
         .pin-input-group input:focus {
             outline: none;
             border-color: #7c7fc6;
             background: rgba(255, 255, 255, 0.08);
-            box-shadow: 0 0 30px rgba(120, 127, 198, 0.3);
-            transform: scale(1.02);
+            box-shadow: 
+                0 0 0 3px rgba(124, 127, 198, 0.2),
+                0 4px 6px rgba(0, 0, 0, 0.1),
+                inset 0 2px 4px rgba(0, 0, 0, 0.1);
+            transform: translateY(-1px);
         }
 
         .pin-error {
-            color: #ef4444;
+            color: #ff4444;
             font-size: 0.9rem;
             margin-bottom: 15px;
             min-height: 20px;
             font-weight: 500;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            opacity: 0;
+            transform: translateY(-10px);
+            transition: all 0.3s ease-out;
+        }
+
+        .pin-error:not(:empty) {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .pin-error::before {
+            content: '⚠️';
+            font-size: 1rem;
         }
 
         .pin-info {
-            margin-top: 12px;
-            padding: 10px;
-            background: rgba(245, 158, 11, 0.1);
+            margin-top: 15px;
+            padding: 12px 15px;
+            background: linear-gradient(135deg,
+                rgba(245, 158, 11, 0.1) 0%,
+                rgba(245, 158, 11, 0.05) 100%);
             border: 1px solid rgba(245, 158, 11, 0.2);
-            border-radius: 8px;
+            border-radius: 10px;
             color: #fbbf24;
-            font-size: 0.8rem;
+            font-size: 0.85rem;
             backdrop-filter: blur(10px);
+            transform-style: preserve-3d;
+            transition: all 0.3s ease;
+        }
+
+        .pin-info:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 8px rgba(245, 158, 11, 0.1);
+            border-color: rgba(245, 158, 11, 0.3);
         }
 
         .pin-info i {
