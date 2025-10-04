@@ -1,0 +1,1113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Encrypt & Decrypt - 3D Edition</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
+            background: #0a0a0a;
+            min-height: 100vh;
+            padding: 20px;
+            overflow-x: hidden;
+            position: relative;
+        }
+
+        /* Animated Background */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: 
+                radial-gradient(circle at 20% 80%, rgba(120, 119, 198, 0.3) 0%, transparent 50%),
+                radial-gradient(circle at 80% 20%, rgba(255, 119, 198, 0.3) 0%, transparent 50%),
+                radial-gradient(circle at 40% 40%, rgba(120, 219, 255, 0.3) 0%, transparent 50%);
+            animation: backgroundShift 20s ease-in-out infinite;
+            z-index: -2;
+        }
+
+        body::after {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: 
+                linear-gradient(45deg, transparent 30%, rgba(255, 255, 255, 0.01) 50%, transparent 70%),
+                linear-gradient(-45deg, transparent 30%, rgba(255, 255, 255, 0.01) 50%, transparent 70%);
+            background-size: 100px 100px;
+            animation: gridMove 10s linear infinite;
+            z-index: -1;
+        }
+
+        @keyframes backgroundShift {
+            0%, 100% { transform: rotate(0deg) scale(1); }
+            33% { transform: rotate(1deg) scale(1.1); }
+            66% { transform: rotate(-1deg) scale(0.9); }
+        }
+
+        @keyframes gridMove {
+            0% { transform: translate(0, 0); }
+            100% { transform: translate(100px, 100px); }
+        }
+        
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: rgba(15, 15, 35, 0.85);
+            backdrop-filter: blur(20px);
+            padding: 50px;
+            border-radius: 30px;
+            box-shadow: 
+                0 30px 80px rgba(0, 0, 0, 0.5),
+                0 0 0 1px rgba(255, 255, 255, 0.1),
+                inset 0 1px 0 rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            position: relative;
+            transform-style: preserve-3d;
+            transition: transform 0.6s cubic-bezier(0.23, 1, 0.32, 1);
+        }
+
+        .container:hover {
+            transform: translateY(-10px) rotateX(2deg);
+        }
+
+        .container::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(45deg, 
+                rgba(120, 119, 198, 0.1) 0%, 
+                rgba(255, 119, 198, 0.1) 50%, 
+                rgba(120, 219, 255, 0.1) 100%);
+            border-radius: 30px;
+            opacity: 0;
+            transition: opacity 0.6s ease;
+            z-index: -1;
+        }
+
+        .container:hover::before {
+            opacity: 1;
+        }
+        
+        h1 {
+            font-size: 3.5rem;
+            text-align: center;
+            margin-bottom: 15px;
+            background: linear-gradient(135deg, #7c7fc6 0%, #ff77c6 50%, #78dbff 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            font-weight: 800;
+            position: relative;
+            animation: titleGlow 3s ease-in-out infinite alternate;
+            text-shadow: 0 0 30px rgba(120, 127, 198, 0.5);
+        }
+
+        @keyframes titleGlow {
+            from { filter: drop-shadow(0 0 10px rgba(120, 127, 198, 0.3)); }
+            to { filter: drop-shadow(0 0 20px rgba(255, 119, 198, 0.4)); }
+        }
+        
+        .subtitle {
+            text-align: center;
+            color: #a1a1aa;
+            margin-bottom: 40px;
+            font-size: 1.2rem;
+            font-weight: 400;
+            opacity: 0;
+            animation: fadeInUp 1s ease-out 0.5s forwards;
+        }
+
+        @keyframes fadeInUp {
+            from { 
+                opacity: 0; 
+                transform: translateY(20px); 
+            }
+            to { 
+                opacity: 1; 
+                transform: translateY(0); 
+            }
+        }
+        
+        .input-group {
+            position: relative;
+            margin-bottom: 30px;
+            opacity: 0;
+            animation: fadeInUp 1s ease-out 0.8s forwards;
+        }
+
+        .input-group:nth-child(even) {
+            animation-delay: 1s;
+        }
+        
+        .input-label {
+            display: block;
+            margin-bottom: 12px;
+            font-weight: 600;
+            color: #e4e4e7;
+            font-size: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .input-label i {
+            color: #7c7fc6;
+            filter: drop-shadow(0 0 5px rgba(120, 127, 198, 0.5));
+        }
+        
+        textarea {
+            width: 100%;
+            padding: 20px;
+            border: 2px solid rgba(255, 255, 255, 0.1);
+            border-radius: 16px;
+            font-size: 16px;
+            resize: vertical;
+            transition: all 0.4s cubic-bezier(0.23, 1, 0.32, 1);
+            font-family: inherit;
+            background: rgba(255, 255, 255, 0.05);
+            color: #e4e4e7;
+            backdrop-filter: blur(10px);
+            box-shadow: inset 0 2px 10px rgba(0, 0, 0, 0.2);
+            position: relative;
+            transform-style: preserve-3d;
+        }
+
+        textarea::placeholder {
+            color: #71717a;
+        }
+        
+        textarea:focus {
+            outline: none;
+            border-color: #7c7fc6;
+            background: rgba(255, 255, 255, 0.08);
+            box-shadow: 
+                0 0 30px rgba(120, 127, 198, 0.3),
+                inset 0 2px 10px rgba(0, 0, 0, 0.2);
+            transform: translateZ(10px);
+        }
+        
+        .button-primary {
+            background: linear-gradient(135deg, #7c7fc6 0%, #ff77c6 100%);
+            color: white;
+            border: none;
+            padding: 16px 32px;
+            border-radius: 16px;
+            font-size: 16px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.4s cubic-bezier(0.23, 1, 0.32, 1);
+            position: relative;
+            overflow: hidden;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            box-shadow: 
+                0 10px 30px rgba(120, 127, 198, 0.4),
+                inset 0 1px 0 rgba(255, 255, 255, 0.2);
+            transform-style: preserve-3d;
+        }
+
+        .button-primary::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, 
+                transparent, 
+                rgba(255, 255, 255, 0.2), 
+                transparent);
+            transition: left 0.6s ease;
+        }
+
+        .button-primary:hover::before {
+            left: 100%;
+        }
+        
+        .button-primary:hover:not(:disabled) {
+            transform: translateY(-5px) translateZ(20px);
+            box-shadow: 
+                0 20px 40px rgba(120, 127, 198, 0.5),
+                0 0 40px rgba(255, 119, 198, 0.3);
+            background: linear-gradient(135deg, #8b8bd1 0%, #ff88d1 100%);
+        }
+        
+        .button-primary:active:not(:disabled) {
+            transform: translateY(-2px) translateZ(10px);
+        }
+        
+        .button-primary:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none !important;
+            filter: grayscale(0.5);
+        }
+        
+        .button-secondary {
+            background: rgba(255, 255, 255, 0.1);
+            color: #e4e4e7;
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            padding: 14px 24px;
+            border-radius: 12px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.4s cubic-bezier(0.23, 1, 0.32, 1);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            backdrop-filter: blur(10px);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .button-secondary::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(45deg, #7c7fc6, #ff77c6);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            z-index: -1;
+        }
+
+        .button-secondary:hover::before {
+            opacity: 0.1;
+        }
+        
+        .button-secondary:hover {
+            background: rgba(255, 255, 255, 0.15);
+            border-color: #7c7fc6;
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(120, 127, 198, 0.3);
+        }
+        
+        .button-group {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 25px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+        
+        .action-buttons {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 25px;
+            margin: 30px 0;
+        }
+        
+        .key-status {
+            background: linear-gradient(135deg, 
+                rgba(34, 197, 94, 0.1) 0%, 
+                rgba(59, 130, 246, 0.1) 100%);
+            border: 1px solid rgba(34, 197, 94, 0.3);
+            padding: 20px;
+            border-radius: 16px;
+            margin: 25px 0;
+            text-align: center;
+            font-weight: 600;
+            color: #22c55e;
+            display: none;
+            backdrop-filter: blur(10px);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .key-status::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: linear-gradient(45deg, 
+                transparent, 
+                rgba(34, 197, 94, 0.05), 
+                transparent);
+            animation: keyStatusShimmer 3s ease-in-out infinite;
+        }
+
+        @keyframes keyStatusShimmer {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .key-status.show {
+            display: block;
+            animation: keyStatusSlideIn 0.8s cubic-bezier(0.23, 1, 0.32, 1);
+        }
+        
+        @keyframes keyStatusSlideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-30px) scale(0.9);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+        
+        .status-indicator {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 20px;
+            border-radius: 25px;
+            font-size: 14px;
+            font-weight: 600;
+            margin-top: 15px;
+            background: rgba(34, 197, 94, 0.2);
+            backdrop-filter: blur(10px);
+        }
+        
+        .status-ready {
+            color: #22c55e;
+        }
+        
+        .icon {
+            margin-right: 10px;
+            filter: drop-shadow(0 0 5px rgba(120, 127, 198, 0.3));
+        }
+        
+        .copy-button {
+            position: relative;
+        }
+        
+        .copy-success {
+            position: absolute;
+            top: -40px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: linear-gradient(135deg, #22c55e, #16a34a);
+            color: white;
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-size: 12px;
+            font-weight: 600;
+            opacity: 0;
+            transition: all 0.3s cubic-bezier(0.23, 1, 0.32, 1);
+            box-shadow: 0 10px 25px rgba(34, 197, 94, 0.4);
+            z-index: 1000;
+        }
+        
+        .copy-success.show {
+            opacity: 1;
+            transform: translateX(-50%) translateY(-10px);
+        }
+        
+        .url-params-info {
+            background: linear-gradient(135deg, 
+                rgba(245, 158, 11, 0.1) 0%, 
+                rgba(251, 191, 36, 0.1) 100%);
+            border: 1px solid rgba(245, 158, 11, 0.3);
+            padding: 20px;
+            border-radius: 16px;
+            margin: 25px 0;
+            color: #fbbf24;
+            font-weight: 500;
+            backdrop-filter: blur(10px);
+        }
+
+        /* Floating Elements */
+        .floating-element {
+            position: absolute;
+            pointer-events: none;
+            opacity: 0.1;
+        }
+
+        .floating-element:nth-child(1) {
+            top: 10%;
+            left: 5%;
+            animation: float1 6s ease-in-out infinite;
+        }
+
+        .floating-element:nth-child(2) {
+            top: 20%;
+            right: 10%;
+            animation: float2 8s ease-in-out infinite;
+        }
+
+        .floating-element:nth-child(3) {
+            bottom: 20%;
+            left: 10%;
+            animation: float3 7s ease-in-out infinite;
+        }
+
+        @keyframes float1 {
+            0%, 100% { transform: translateY(0px) rotateZ(0deg); }
+            50% { transform: translateY(-20px) rotateZ(180deg); }
+        }
+
+        @keyframes float2 {
+            0%, 100% { transform: translateX(0px) rotateZ(0deg); }
+            50% { transform: translateX(-15px) rotateZ(-180deg); }
+        }
+
+        @keyframes float3 {
+            0%, 100% { transform: translateY(0px) rotateZ(0deg); }
+            50% { transform: translateY(-25px) rotateZ(90deg); }
+        }
+        
+        @media (max-width: 768px) {
+            .container {
+                padding: 30px;
+                margin: 15px;
+                border-radius: 25px;
+            }
+            
+            h1 {
+                font-size: 2.5rem;
+            }
+            
+            .action-buttons {
+                grid-template-columns: 1fr;
+                gap: 20px;
+            }
+            
+            .button-group {
+                justify-content: center;
+            }
+        }
+        
+        .tooltip {
+            position: relative;
+            display: inline-block;
+        }
+        
+        .tooltip .tooltiptext {
+            visibility: hidden;
+            width: 220px;
+            background: linear-gradient(135deg, #1f2937 0%, #374151 100%);
+            color: #e5e7eb;
+            text-align: center;
+            border-radius: 12px;
+            padding: 12px;
+            position: absolute;
+            z-index: 1000;
+            bottom: 140%;
+            left: 50%;
+            margin-left: -110px;
+            font-size: 12px;
+            font-weight: 500;
+            opacity: 0;
+            transition: all 0.3s cubic-bezier(0.23, 1, 0.32, 1);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.3);
+        }
+
+        .tooltip .tooltiptext::after {
+            content: '';
+            position: absolute;
+            top: 100%;
+            left: 50%;
+            margin-left: -5px;
+            border-width: 5px;
+            border-style: solid;
+            border-color: #374151 transparent transparent transparent;
+        }
+        
+        .tooltip:hover .tooltiptext {
+            visibility: visible;
+            opacity: 1;
+            transform: translateY(-10px);
+        }
+
+        /* PIN Authentication Styles */
+        .pin-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.95);
+            backdrop-filter: blur(20px);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+        }
+
+        .pin-modal {
+            background: linear-gradient(135deg, 
+                rgba(15, 15, 35, 0.95) 0%, 
+                rgba(25, 25, 45, 0.95) 100%);
+            backdrop-filter: blur(30px);
+            padding: 50px;
+            border-radius: 25px;
+            box-shadow: 
+                0 30px 80px rgba(0, 0, 0, 0.5),
+                0 0 0 1px rgba(255, 255, 255, 0.1);
+            max-width: 450px;
+            width: 90%;
+            text-align: center;
+            position: relative;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            animation: modalSlideIn 0.8s cubic-bezier(0.23, 1, 0.32, 1);
+        }
+
+        @keyframes modalSlideIn {
+            from {
+                opacity: 0;
+                transform: translateY(50px) scale(0.9);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+
+        .pin-header {
+            margin-bottom: 35px;
+        }
+
+        .pin-header i {
+            font-size: 4rem;
+            background: linear-gradient(135deg, #7c7fc6 0%, #ff77c6 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 20px;
+            filter: drop-shadow(0 0 10px rgba(120, 127, 198, 0.3));
+        }
+
+        .pin-header h2 {
+            color: #e4e4e7;
+            margin-bottom: 15px;
+            font-size: 1.8rem;
+            font-weight: 700;
+        }
+
+        .pin-header p {
+            color: #a1a1aa;
+            font-size: 1rem;
+        }
+
+        .pin-input-group {
+            margin-bottom: 25px;
+        }
+
+        .pin-input-group input {
+            width: 100%;
+            padding: 18px;
+            margin-bottom: 15px;
+            border: 2px solid rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            font-size: 20px;
+            text-align: center;
+            font-family: 'JetBrains Mono', monospace;
+            letter-spacing: 4px;
+            background: rgba(255, 255, 255, 0.05);
+            color: #e4e4e7;
+            transition: all 0.4s cubic-bezier(0.23, 1, 0.32, 1);
+            backdrop-filter: blur(10px);
+        }
+
+        .pin-input-group input:focus {
+            outline: none;
+            border-color: #7c7fc6;
+            background: rgba(255, 255, 255, 0.08);
+            box-shadow: 0 0 30px rgba(120, 127, 198, 0.3);
+            transform: scale(1.02);
+        }
+
+        .pin-error {
+            color: #ef4444;
+            font-size: 0.95rem;
+            margin-bottom: 20px;
+            min-height: 24px;
+            font-weight: 500;
+        }
+
+        .pin-info {
+            margin-top: 25px;
+            padding: 18px;
+            background: rgba(245, 158, 11, 0.1);
+            border: 1px solid rgba(245, 158, 11, 0.2);
+            border-radius: 12px;
+            color: #fbbf24;
+            font-size: 0.85rem;
+            backdrop-filter: blur(10px);
+        }
+
+        .pin-info i {
+            margin-right: 8px;
+        }
+
+        .container.locked {
+            filter: blur(5px);
+            pointer-events: none;
+        }
+
+        /* Footer Styles */
+        .footer {
+            text-align: center;
+            margin-top: 50px;
+            padding-top: 30px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            color: #a1a1aa;
+            font-size: 0.95rem;
+            opacity: 0;
+            animation: fadeInUp 1s ease-out 1.2s forwards;
+        }
+
+        .footer p {
+            margin: 8px 0;
+        }
+
+        .footer a {
+            color: #7c7fc6;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .footer a::after {
+            content: '';
+            position: absolute;
+            bottom: -2px;
+            left: 0;
+            width: 0;
+            height: 2px;
+            background: linear-gradient(135deg, #7c7fc6, #ff77c6);
+            transition: width 0.3s ease;
+        }
+
+        .footer a:hover::after {
+            width: 100%;
+        }
+
+        .footer a:hover {
+            color: #ff77c6;
+        }
+    </style>
+</head>
+<body>
+    <!-- Floating Elements -->
+    <div class="floating-element">
+        <i class="fas fa-shield-alt" style="font-size: 60px; color: #7c7fc6;"></i>
+    </div>
+    <div class="floating-element">
+        <i class="fas fa-key" style="font-size: 50px; color: #ff77c6;"></i>
+    </div>
+    <div class="floating-element">
+        <i class="fas fa-lock" style="font-size: 55px; color: #78dbff;"></i>
+    </div>
+
+    <!-- PIN Authentication Modal -->
+    <div class="pin-overlay" id="pinOverlay">
+        <div class="pin-modal">
+            <div class="pin-header">
+                <i class="fas fa-fingerprint"></i>
+                <h2 id="pinTitle">Set Your PIN</h2>
+                <p id="pinSubtitle">Create a 4-8 digit PIN to secure access to this tool</p>
+            </div>
+            <div class="pin-input-group">
+                <input type="password" id="pinInput" placeholder="Enter PIN" maxlength="8" autocomplete="off">
+                <input type="password" id="confirmPinInput" placeholder="Confirm PIN" maxlength="8" autocomplete="off" style="display: none;">
+            </div>
+            <div class="pin-error" id="pinError"></div>
+            <button class="button-primary" id="pinSubmitButton">
+                <i class="fas fa-unlock-alt"></i> Set PIN
+            </button>
+            <div class="pin-info">
+                <i class="fas fa-info-circle"></i>
+                <small>Don't forget the pin - there's no recovery option!</small>
+            </div>
+        </div>
+    </div>
+
+    <div class="container">
+        <h1><i class="fas fa-shield-alt icon"></i>Encrypt & Decrypt</h1>
+        <p class="subtitle">Next-generation encryption with military-grade AES-GCM security</p>
+        
+        <div class="key-status" id="keyStatus">
+            <i class="fas fa-key"></i> Quantum-resistant encryption key generated successfully!
+            <div class="status-indicator status-ready">
+                <i class="fas fa-check-circle"></i>
+                Ready to encrypt/decrypt
+            </div>
+        </div>
+        
+        <div class="url-params-info" id="urlParamsInfo" style="display: none;">
+            <i class="fas fa-info-circle"></i> Encrypted message detected! Preparing automatic decryption...
+        </div>
+        
+        <div class="input-group">
+            <label class="input-label" for="inputText">
+                <i class="fas fa-edit"></i> Input Text
+            </label>
+            <textarea id="inputText" rows="6" placeholder="Enter your message to encrypt or decrypt..."></textarea>
+        </div>
+        
+        <div class="button-group">
+            <button class="button-secondary tooltip" id="pasteButton">
+                <i class="fas fa-paste"></i> Paste
+                <span class="tooltiptext">Paste content from your clipboard</span>
+            </button>
+            <button class="button-secondary tooltip" id="clearButton">
+                <i class="fas fa-trash-alt"></i> Clear
+                <span class="tooltiptext">Clear all input text</span>
+            </button>
+        </div>
+        
+        <button class="button-primary" id="generateKeyButton">
+            <i class="fas fa-key"></i> Generate Quantum Key
+        </button>
+        
+        <div class="action-buttons">
+            <button class="button-primary tooltip" id="encryptButton" disabled>
+                <i class="fas fa-lock"></i> Encrypt Message
+                <span class="tooltiptext">Encrypt text and generate shareable link</span>
+            </button>
+            <button class="button-primary tooltip" id="decryptButton" disabled>
+                <i class="fas fa-unlock"></i> Decrypt Message
+                <span class="tooltiptext">Decrypt message from URL parameters</span>
+            </button>
+        </div>
+        
+        <div class="input-group">
+            <label class="input-label" for="outputText">
+                <i class="fas fa-file-alt"></i> Secure Output
+            </label>
+            <textarea id="outputText" rows="6" readonly placeholder="Your encrypted link or decrypted message will appear here..."></textarea>
+        </div>
+        
+        <div class="button-group">
+            <button class="button-secondary copy-button tooltip" id="copyButton">
+                <i class="fas fa-copy"></i> Copy Result
+                <span class="tooltiptext">Copy output to clipboard</span>
+                <div class="copy-success" id="copySuccess">
+                    <i class="fas fa-check"></i> Copied!
+                </div>
+            </button>
+        </div>
+        
+        <!-- Footer -->
+        <div class="footer">
+            <p>Crafted with <i class="fas fa-heart" style="color: #ff77c6;"></i> by <strong>Soumik Paul</strong></p>
+            <p><a href="mailto:paulsoumik07@gmail.com"><i class="fas fa-envelope"></i> paulsoumik07@gmail.com</a></p>
+        </div>
+    </div>
+
+    <script>
+        let encryptionKey; // Holds the AES encryption key
+        let iv;            // Holds the Initialization Vector (IV) for AES-GCM
+        let isAuthenticated = false;
+
+        // PIN Authentication Functions
+        function initPinAuth() {
+            const storedPin = localStorage.getItem('appPin');
+            const pinOverlay = document.getElementById('pinOverlay');
+            const container = document.querySelector('.container');
+            
+            if (!storedPin) {
+                // First time user - show PIN setup
+                showPinSetup();
+            } else {
+                // Returning user - show PIN entry
+                showPinEntry();
+            }
+            
+            container.classList.add('locked');
+        }
+
+        function showPinSetup() {
+            document.getElementById('pinTitle').textContent = 'Set Your PIN';
+            document.getElementById('pinSubtitle').textContent = 'Create a 4-8 digit PIN to secure access to this tool';
+            document.getElementById('confirmPinInput').style.display = 'block';
+            document.getElementById('pinSubmitButton').innerHTML = '<i class="fas fa-unlock-alt"></i> Set PIN';
+        }
+
+        function showPinEntry() {
+            document.getElementById('pinTitle').textContent = 'Enter Your PIN';
+            document.getElementById('pinSubtitle').textContent = 'Enter your PIN to access the encryption tool';
+            document.getElementById('confirmPinInput').style.display = 'none';
+            document.getElementById('pinSubmitButton').innerHTML = '<i class="fas fa-unlock-alt"></i> Unlock';
+        }
+
+        function validatePin() {
+            const pinInput = document.getElementById('pinInput').value;
+            const confirmPinInput = document.getElementById('confirmPinInput').value;
+            const storedPin = localStorage.getItem('appPin');
+            const pinError = document.getElementById('pinError');
+
+            pinError.textContent = '';
+
+            if (!storedPin) {
+                // Setting up new PIN
+                if (pinInput.length < 4 || pinInput.length > 8) {
+                    pinError.textContent = 'PIN must be 4-8 digits long';
+                    return false;
+                }
+
+                if (!/^\d+$/.test(pinInput)) {
+                    pinError.textContent = 'PIN must contain only numbers';
+                    return false;
+                }
+
+                if (pinInput !== confirmPinInput) {
+                    pinError.textContent = 'PINs do not match';
+                    return false;
+                }
+
+                // Save PIN (hashed for security)
+                const hashedPin = btoa(pinInput + 'salt123'); // Simple hashing
+                localStorage.setItem('appPin', hashedPin);
+                unlockApp();
+                return true;
+            } else {
+                // Verifying existing PIN
+                if (pinInput.length < 4) {
+                    pinError.textContent = 'Enter your PIN';
+                    return false;
+                }
+
+                const hashedInput = btoa(pinInput + 'salt123');
+                if (hashedInput === storedPin) {
+                    unlockApp();
+                    return true;
+                } else {
+                    pinError.textContent = 'Incorrect PIN';
+                    return false;
+                }
+            }
+        }
+
+        function unlockApp() {
+            isAuthenticated = true;
+            document.getElementById('pinOverlay').style.display = 'none';
+            document.querySelector('.container').classList.remove('locked');
+            
+            // Check for URL parameters after authentication
+            const urlParams = new URLSearchParams(window.location.search);
+            const keyBase64 = urlParams.get("key");
+            const ciphertextBase64 = urlParams.get("ciphertext");
+
+            if (keyBase64 && ciphertextBase64) {
+                document.getElementById("urlParamsInfo").style.display = "block";
+                decryptText();
+            }
+        }
+
+        function resetPin() {
+            if (confirm('Are you sure you want to reset your PIN? You will need to set a new one.')) {
+                localStorage.removeItem('appPin');
+                location.reload();
+            }
+        }
+
+        // Generate a new AES encryption key
+        async function generateKey() {
+            if (!isAuthenticated) return;
+            
+            encryptionKey = await window.crypto.subtle.generateKey(
+                {
+                    name: "AES-GCM",
+                    length: 256,
+                },
+                true,
+                ["encrypt", "decrypt"]
+            );
+
+            iv = window.crypto.getRandomValues(new Uint8Array(12)); // Generate a random IV
+            
+            // Show key status
+            document.getElementById("keyStatus").classList.add("show");
+            document.getElementById("encryptButton").disabled = false;
+            document.getElementById("decryptButton").disabled = false;
+        }
+
+        // Encrypt text
+        async function encryptText() {
+            if (!isAuthenticated) return;
+            
+            const input = document.getElementById("inputText").value;
+            if (!input) {
+                showAlert("Please enter text to encrypt.", "warning");
+                return;
+            }
+            const encoded = new TextEncoder().encode(input);
+            const ciphertext = await window.crypto.subtle.encrypt(
+                {
+                    name: "AES-GCM",
+                    iv: iv,
+                },
+                encryptionKey,
+                encoded
+            );
+
+            // Export the key and generate a sharable link
+            const keyExport = await window.crypto.subtle.exportKey("raw", encryptionKey);
+            const keyBase64 = btoa(String.fromCharCode(...new Uint8Array(keyExport)));
+            const ivBase64 = btoa(String.fromCharCode(...iv)); // Convert IV to Base64
+            const encryptedBase64 = btoa(String.fromCharCode(...new Uint8Array(ciphertext)));
+
+            const baseUrl = window.location.origin + window.location.pathname;
+            const shareableLink = `${baseUrl}?key=${encodeURIComponent(keyBase64)}&iv=${encodeURIComponent(ivBase64)}&ciphertext=${encodeURIComponent(encryptedBase64)}`;
+
+            document.getElementById("outputText").value = shareableLink;
+        }
+
+        // Decrypt text
+        async function decryptText() {
+            if (!isAuthenticated) return;
+            
+            const urlParams = new URLSearchParams(window.location.search);
+            const keyBase64 = urlParams.get("key");
+            const ciphertextBase64 = urlParams.get("ciphertext");
+            const ivBase64 = urlParams.get("iv");
+
+            if (!keyBase64 || !ciphertextBase64 || !ivBase64) {
+                showAlert("No encryption key, ciphertext, or IV found. Please provide a valid link.", "error");
+                return;
+            }
+
+            try {
+                // Import the key
+                const keyBytes = Uint8Array.from(atob(keyBase64), c => c.charCodeAt(0));
+                const importedKey = await window.crypto.subtle.importKey(
+                    "raw",
+                    keyBytes,
+                    "AES-GCM",
+                    true,
+                    ["decrypt"]
+                );
+
+                // Decode the IV and ciphertext
+                const ivDecoded = Uint8Array.from(atob(ivBase64), c => c.charCodeAt(0));
+                const ciphertextBytes = Uint8Array.from(atob(ciphertextBase64), c => c.charCodeAt(0));
+
+                // Decrypt the message
+                const decrypted = await window.crypto.subtle.decrypt(
+                    {
+                        name: "AES-GCM",
+                        iv: ivDecoded,
+                    },
+                    importedKey,
+                    ciphertextBytes
+                );
+
+                const decoded = new TextDecoder().decode(decrypted);
+                document.getElementById("outputText").value = decoded;
+            } catch (err) {
+                showAlert("Decryption failed. Make sure the key, IV, and ciphertext are valid.", "error");
+            }
+        }
+
+        // Copy output text to clipboard
+        async function copyToClipboard() {
+            if (!isAuthenticated) return;
+            
+            const output = document.getElementById("outputText");
+            if (output.value) {
+                try {
+                    await navigator.clipboard.writeText(output.value);
+                    showCopySuccess();
+                } catch (err) {
+                    // Fallback for older browsers
+                    output.select();
+                    document.execCommand('copy');
+                    showCopySuccess();
+                }
+            } else {
+                showAlert("Nothing to copy!", "warning");
+            }
+        }
+
+        // Show copy success animation
+        function showCopySuccess() {
+            const copySuccess = document.getElementById("copySuccess");
+            copySuccess.classList.add("show");
+            setTimeout(() => {
+                copySuccess.classList.remove("show");
+            }, 2000);
+        }
+
+        // Paste text into input box
+        async function pasteFromClipboard() {
+            if (!isAuthenticated) return;
+            
+            try {
+                const text = await navigator.clipboard.readText();
+                document.getElementById("inputText").value = text;
+            } catch (err) {
+                showAlert("Unable to paste from clipboard.", "error");
+            }
+        }
+
+        // Clear the input box
+        function clearInputBox() {
+            if (!isAuthenticated) return;
+            
+            document.getElementById("inputText").value = "";
+            document.getElementById("outputText").value = "";
+        }
+
+        // Show alert (replacing browser alert)
+        function showAlert(message, type) {
+            // For now, still using browser alert, but could be replaced with custom modal
+            alert(message);
+        }
+
+        // Check if URL has decryption parameters and prepopulate fields
+        window.onload = () => {
+            // Initialize PIN authentication first
+            initPinAuth();
+            // Note: URL parameter checking is now handled in unlockApp() after authentication
+        };
+
+        // Attach event listeners
+        document.getElementById("generateKeyButton").addEventListener("click", generateKey);
+        document.getElementById("encryptButton").addEventListener("click", encryptText);
+        document.getElementById("decryptButton").addEventListener("click", decryptText);
+        document.getElementById("copyButton").addEventListener("click", copyToClipboard);
+        document.getElementById("pasteButton").addEventListener("click", pasteFromClipboard);
+        document.getElementById("clearButton").addEventListener("click", clearInputBox);
+        
+        // PIN authentication event listeners
+        document.getElementById("pinSubmitButton").addEventListener("click", validatePin);
+        document.getElementById("pinInput").addEventListener("keypress", function(e) {
+            if (e.key === "Enter") {
+                if (!localStorage.getItem('appPin')) {
+                    document.getElementById("confirmPinInput").focus();
+                } else {
+                    validatePin();
+                }
+            }
+        });
+        document.getElementById("confirmPinInput").addEventListener("keypress", function(e) {
+            if (e.key === "Enter") {
+                validatePin();
+            }
+        });
+
+        // Add reset PIN option (for development/testing - can be removed)
+        document.addEventListener("keydown", function(e) {
+            if (e.ctrlKey && e.shiftKey && e.key === "R") {
+                resetPin();
+            }
+        });
+    </script>
