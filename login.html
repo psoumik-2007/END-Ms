@@ -310,6 +310,34 @@
             justify-content: center;
         }
         
+        .whatsapp-button {
+            background: linear-gradient(135deg, #25D366 0%, #128C7E 100%);
+            color: white;
+            border: none;
+            padding: 14px 24px;
+            border-radius: 12px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.4s cubic-bezier(0.23, 1, 0.32, 1);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            display: none;
+            align-items: center;
+            gap: 8px;
+            box-shadow: 0 4px 15px rgba(37, 211, 102, 0.3);
+        }
+
+        .whatsapp-button i {
+            font-size: 18px;
+        }
+
+        .whatsapp-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(37, 211, 102, 0.4);
+            background: linear-gradient(135deg, #2FDC74 0%, #15A892 100%);
+        }
+        
         .action-buttons {
             display: grid;
             grid-template-columns: 1fr 1fr;
@@ -535,6 +563,62 @@
             transform: translateY(-10px);
         }
 
+        /* Custom Keypad Styles */
+        .keypad {
+            display: none; /* Hidden by default */
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            width: 100%;
+            max-width: 300px;
+            margin: 15px auto;
+            padding: 10px;
+        }
+
+        .keypad-btn {
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.05) 100%);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: #e4e4e7;
+            font-size: 24px;
+            padding: 15px;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.23, 1, 0.32, 1);
+            backdrop-filter: blur(10px);
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        .keypad-btn:hover {
+            background: rgba(255, 255, 255, 0.15);
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(120, 127, 198, 0.3);
+        }
+
+        .keypad-btn:active {
+            transform: translateY(1px);
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .keypad-btn.clear {
+            background: linear-gradient(135deg, rgba(239, 68, 68, 0.2) 0%, rgba(239, 68, 68, 0.1) 100%);
+            color: #ef4444;
+        }
+
+        .keypad-btn.backspace {
+            background: linear-gradient(135deg, rgba(120, 127, 198, 0.2) 0%, rgba(120, 127, 198, 0.1) 100%);
+            color: #7c7fc6;
+        }
+
+        @media (max-width: 768px) {
+            .keypad {
+                display: grid;
+            }
+            
+            .keypad-btn {
+                padding: 20px;
+                font-size: 28px;
+            }
+        }
+
         /* PIN Authentication Styles */
         .pin-overlay {
             position: fixed;
@@ -725,7 +809,27 @@
                 <p id="pinSubtitle">Create a 4-8 digit PIN to secure access to this tool</p>
             </div>
             <div class="pin-input-group">
-                <input type="password" id="pinInput" placeholder="Enter PIN" maxlength="8" autocomplete="off">
+                <input type="tel" 
+                       id="pinInput" 
+                       placeholder="Enter PIN" 
+                       maxlength="8" 
+                       autocomplete="off"
+                       inputmode="numeric" 
+                       pattern="[0-9]*">
+                <div class="keypad" id="numericKeypad">
+                    <button class="keypad-btn" data-value="1">1</button>
+                    <button class="keypad-btn" data-value="2">2</button>
+                    <button class="keypad-btn" data-value="3">3</button>
+                    <button class="keypad-btn" data-value="4">4</button>
+                    <button class="keypad-btn" data-value="5">5</button>
+                    <button class="keypad-btn" data-value="6">6</button>
+                    <button class="keypad-btn" data-value="7">7</button>
+                    <button class="keypad-btn" data-value="8">8</button>
+                    <button class="keypad-btn" data-value="9">9</button>
+                    <button class="keypad-btn clear" data-value="clear">C</button>
+                    <button class="keypad-btn" data-value="0">0</button>
+                    <button class="keypad-btn backspace" data-value="backspace">⌫</button>
+                </div>
                 <input type="password" id="confirmPinInput" placeholder="Confirm PIN" maxlength="8" autocomplete="off" style="display: none;">
             </div>
             <div class="pin-error" id="pinError"></div>
@@ -803,6 +907,10 @@
                     <i class="fas fa-check"></i> Copied!
                 </div>
             </button>
+            <button class="whatsapp-button tooltip" id="whatsappButton">
+                <i class="fab fa-whatsapp"></i> Share via WhatsApp
+                <span class="tooltiptext">Open in WhatsApp</span>
+            </button>
         </div>
         
         <!-- Footer -->
@@ -816,6 +924,48 @@
         let encryptionKey; // Holds the AES encryption key
         let iv;            // Holds the Initialization Vector (IV) for AES-GCM
         let isAuthenticated = false;
+        
+        // Mobile detection
+        const isMobile = /Android|iPhone|iPad|iPod|Windows Phone/i.test(navigator.userAgent);
+        
+        // Keypad functionality
+        const numericKeypad = document.getElementById('numericKeypad');
+        const pinInput = document.getElementById('pinInput');
+        
+        // Show keypad only on mobile devices
+        if (isMobile) {
+            pinInput.readOnly = true; // Prevent native keyboard on mobile
+            numericKeypad.style.display = 'grid';
+        }
+        
+        // Handle keypad button clicks
+        numericKeypad.addEventListener('click', (e) => {
+            const button = e.target;
+            if (!button.classList.contains('keypad-btn')) return;
+            
+            const value = button.dataset.value;
+            const currentValue = pinInput.value;
+            
+            switch(value) {
+                case 'clear':
+                    pinInput.value = '';
+                    break;
+                case 'backspace':
+                    pinInput.value = currentValue.slice(0, -1);
+                    break;
+                default:
+                    if (currentValue.length < 8) {
+                        pinInput.value = currentValue + value;
+                        
+                        // Add subtle animation to the clicked button
+                        button.style.transform = 'scale(0.95)';
+                        setTimeout(() => button.style.transform = '', 150);
+                    }
+            }
+            
+            // Trigger input event to ensure validation works
+            pinInput.dispatchEvent(new Event('input'));
+        });
 
         // PIN Authentication Functions
         function initPinAuth() {
@@ -969,6 +1119,20 @@
             const shareableLink = `${baseUrl}?key=${encodeURIComponent(keyBase64)}&iv=${encodeURIComponent(ivBase64)}&ciphertext=${encodeURIComponent(encryptedBase64)}`;
 
             document.getElementById("outputText").value = shareableLink;
+            
+            // Show WhatsApp button after encryption
+            document.getElementById("whatsappButton").style.display = "flex";
+        }
+
+        // Share via WhatsApp
+        function shareViaWhatsapp() {
+            const encryptedLink = document.getElementById("outputText").value;
+            if (encryptedLink) {
+                const whatsappUrl = `https://wa.me/?text=${encodeURIComponent("Here's your encrypted message: " + encryptedLink)}`;
+                window.open(whatsappUrl, '_blank');
+            } else {
+                showAlert("Please encrypt a message first.", "warning");
+            }
         }
 
         // Decrypt text
@@ -1086,6 +1250,7 @@
         document.getElementById("copyButton").addEventListener("click", copyToClipboard);
         document.getElementById("pasteButton").addEventListener("click", pasteFromClipboard);
         document.getElementById("clearButton").addEventListener("click", clearInputBox);
+        document.getElementById("whatsappButton").addEventListener("click", shareViaWhatsapp);
         
         // PIN authentication event listeners
         document.getElementById("pinSubmitButton").addEventListener("click", validatePin);
@@ -1111,4 +1276,3 @@
             }
         });
     </script>
-    
